@@ -1,10 +1,10 @@
 import functools
-import sys
-from dataclasses import dataclass
-from itertools import product
 import math
 import re
+import sys
+from dataclasses import dataclass
 from fractions import Fraction as F
+from itertools import product
 
 
 @dataclass
@@ -40,19 +40,14 @@ class Printi:
     #       may be supported in the future."
     def __call__(self, *args, **kwargs):
         print(*args, **kwargs)
-        string = ' '.join(map(str, args))
+        value = ' '.join(map(str, args))
 
-        for rep in self.find_representations(string):
-            print(rep)
+        # If we're watching, self.print_reps will have already been called.
+        if not self.original_write:
+            self.print_reps(value)
 
-    # TODO (@davidgilbertson): delete this set_config, better to do it directly setting attributes
-    # def set_config(self, **new_opt):
-    #     # TODO (@davidgilbertson): Explicit `None` resets to default?
-    #     for key, val in new_opt.items():
-    #         if hasattr(self._conf, key):
-    #             setattr(self._conf, key, val)
-    #         else:
-    #             print(f'Unknown option {key!r}')
+        # for rep in self.find_representations(value):
+        #     print(rep)
 
     def format_equation(
             self,
@@ -304,7 +299,17 @@ class Printi:
 
         return results
 
+    def print_reps(self, value):
+        write = self.original_write or sys.stdout.write
+        for result in self.find_representations(value):
+            write('\n')
+            write(result)
+
     def watch(self):
+        if self.original_write:
+            print('Already watching')
+            return
+
         std_write = sys.stdout.write
         self.original_write = std_write
 
@@ -319,9 +324,10 @@ class Printi:
 
             # print() calls this with '\n' for every other write, skip those
             if value != '\n':
-                for result in self.find_representations(value):
-                    std_write('\n')
-                    std_write(result)
+                self.print_reps(value)
+                # for result in self.find_representations(value):
+                #     std_write('\n')
+                #     std_write(result)
 
         sys.stdout.write = watched_write
 
@@ -332,25 +338,33 @@ class Printi:
     def unwatch(self):
         if self.original_write:
             sys.stdout.write = self.original_write
+            self.original_write = None
 
         print('Printi is no longer watching. Type `printi.watch()` to resume.')
-
-
-printi = Printi()
-watch = printi.watch
-unwatch = printi.unwatch
-update_config = printi.update_config
 
 
 def main():
     print('Running printi.py')
 
-    printi(0.7071067811865476)
+    printi = Printi()
+    printi.watch()
 
     # printi(f'Hey this is {math.sin(math.pi / 4)=}')
     # printi(f'1. This is 1.2345678')
-    # printi.update_config(specials={1.2345678: 'y'}, max_denominator=5)
-    # printi(f'2. This is 1.2345678')
+    printi.update_config(specials={1.2345678: 'y'}, max_denominator=5)
+    printi(f'2. This is 1.2345678')
+
+    printi.update_config(
+        min_denominator=3,
+        max_denominator=100,
+        tol=1e-9,
+        specials={
+            math.pi: 'π',
+            math.tau: 'τ',
+            math.e: 'e',
+        },
+        symbol='💡',
+    )
     # printi.update_config(specials={1.2345678: None})
     # printi(f'3. This is 1.2345678')
     # printi('What is this 1.2345678 thing?')

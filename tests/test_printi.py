@@ -1,11 +1,12 @@
 import math
-from math import pi, e, tau
-from fractions import Fraction as F
 import random
 import unittest
+from fractions import Fraction as F
+from math import pi, e, tau
 from unittest.mock import patch, call
 
-from .printi import printi
+from src.printi import printi
+
 
 class TestPrinti(unittest.TestCase):
     def test_printi(self):

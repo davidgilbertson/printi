@@ -3,13 +3,25 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[[source]]
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+name = "testpypi"
+
 [packages]
 
 [dev-packages]
 build = "*"
+printi-davidgilbertson = {index = "testpypi"}
+printi = {editable = true, path = "."}
+twine = "*"
+sphinx = "*"
 
 [requires]
 python_version = "3.10"
 
 [scripts]
-test = "py -m unittest discover -s src"
+build = "py -m build"
+test = "py -m unittest discover -s tests"
+publish_test = "py -m twine upload --repository testpypi dist/*"
+publish = "py -m twine upload dist/*"
